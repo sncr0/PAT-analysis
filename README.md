@@ -1,4 +1,4 @@
-[![Codecov](https://codecov.io/gh/your-username/your-repo/branch/main/graph/badge.svg)](https://codecov.io/gh/your-username/your-repo)
+[![Codecov](https://codecov.io/gh/sncr0/PAT-analysis/branch/main/graph/badge.svg)](https://codecov.io/gh/sncr0/PAT-analysis)
 
 # PAT analysis
 
