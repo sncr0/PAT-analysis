@@ -5,15 +5,12 @@ from src.data_formats.spectroscopic_datapoint import SpectroscopicDatapoint, Spe
 class InfraredDatapoint(SpectroscopicDatapoint):
     def __init__(self, data: pd.DataFrame):
         super().__init__(data)
-        self.type = "Infrared"
 
 
 class InfraredDataSequence(SpectroscopicDataSequence):
     def __init__(self):
         super().__init__()
-        self.type = "Infrared"
+        self.type = InfraredDatapoint
 
-    def add_datapoint(self, datapoint: InfraredDatapoint):
-        if not isinstance(datapoint, InfraredDatapoint):
-            raise TypeError("Only InfraredDatapoint instances can be added.")
+    def _add_datapoint_impl(self, datapoint: InfraredDatapoint):
         self.data_sequence.append(datapoint)

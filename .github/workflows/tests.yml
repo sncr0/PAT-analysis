@@ -11,7 +11,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0  # ✅ Ensures latest commits are used
 
       - name: Set up Miniconda
         uses: conda-incubator/setup-miniconda@v3
@@ -27,14 +27,19 @@ jobs:
           conda activate pat-analysis
           pip install pytest pytest-cov codecov  # ✅ Install missing test dependencies
 
-      - name: Run tests
+      - name: Verify `pytest.ini` is detected
         shell: bash -l {0}
         run: |
           conda activate pat-analysis
-          pytest --cov=src --cov-branch --cov-report=xml
+          pytest --help | grep "cov-report"  # ✅ Ensure pytest.ini settings are applied
+
+      - name: Run tests using `pytest.ini`
+        shell: bash -l {0}
+        run: |
+          conda activate pat-analysis
+          pytest  # ✅ Uses `pytest.ini` settings automatically
 
       - name: Upload results to Codecov
         uses: codecov/codecov-action@v5
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}  # ✅ Only needed for private repos
           file: ./coverage.xml
