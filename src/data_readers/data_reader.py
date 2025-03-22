@@ -4,20 +4,20 @@ from typing import Callable, Type
 from datetime import timedelta
 import pandas as pd
 from src.data_readers.mixins.csv_reader_mixin import CSVReaderMixin
-from src.data_formats.spectroscopic_datapoint import SpectroscopicDatapoint, SpectroscopicDataSequence
+from src.data_formats.spectroscopic_measurement import SpectroscopicMeasurement, SpectroscopicMeasurementSequence
 
 
 class DataReader(CSVReaderMixin, ABC
                  ):
     def __init__(self):
-        self.file_processors: dict[str, Callable[[str, Type[SpectroscopicDatapoint]], SpectroscopicDatapoint]] = {
+        self.file_processors: dict[str, Callable[[str, Type[SpectroscopicMeasurement]], SpectroscopicMeasurement]] = {
             "csv": self._process_csv,
         }
 
     def _get_file_processor(
         self,
         extension: str
-    ) -> Callable[[str, Type[SpectroscopicDatapoint]], SpectroscopicDatapoint]:
+    ) -> Callable[[str, Type[SpectroscopicMeasurement]], SpectroscopicMeasurement]:
         file_processor = self.file_processors.get(extension)
         if not file_processor:
             raise ValueError(f"No file processor found for extension: {extension}")
@@ -61,8 +61,8 @@ class DataReader(CSVReaderMixin, ABC
     def read_file(
         self,
         file_path: str,
-        file_processor: Callable[[str, Type[SpectroscopicDatapoint]], SpectroscopicDatapoint] = None
-    ) -> SpectroscopicDatapoint:
+        file_processor: Callable[[str, Type[SpectroscopicMeasurement]], SpectroscopicMeasurement] = None
+    ) -> SpectroscopicMeasurement:
         if not file_processor:
             self._validate_file_path(file_path)
             extension = self._get_file_extension(file_path)
@@ -76,8 +76,8 @@ class DataReader(CSVReaderMixin, ABC
     def read_folder(
         self,
         folder_path: str,
-        file_processor: Callable[[str, Type[SpectroscopicDatapoint]], SpectroscopicDatapoint] = None
-    ) -> SpectroscopicDataSequence:
+        file_processor: Callable[[str, Type[SpectroscopicMeasurement]], SpectroscopicMeasurement] = None
+    ) -> SpectroscopicMeasurementSequence:
         if not file_processor:
             self._validate_folder_path(folder_path)
             extension = self._get_folder_extension(folder_path)
@@ -88,6 +88,6 @@ class DataReader(CSVReaderMixin, ABC
     def _read_folder_impl(
         self,
         folder_path: str,
-        file_processor: Callable[[str, Type[SpectroscopicDatapoint]], SpectroscopicDatapoint]
-    ) -> SpectroscopicDataSequence:
+        file_processor: Callable[[str, Type[SpectroscopicMeasurement]], SpectroscopicMeasurement]
+    ) -> SpectroscopicMeasurementSequence:
         pass

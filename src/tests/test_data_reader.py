@@ -3,14 +3,14 @@ import os
 import pandas as pd
 from src.data_readers.data_reader import DataReader
 from src.data_readers.infrared_reader import InfraredReader
-from src.data_formats.infrared_datapoint import InfraredDatapoint, InfraredDataSequence
+from src.data_formats.infrared_measurement import InfraredMeasurement, InfraredMeasurementSequence
 from src.data_readers.mixins.csv_reader_mixin import CSVReaderMixin
 
 
 class InfraredMockDataReader(DataReader):
     """Mock class for testing abstract DataReader."""
     def _read_file_impl(self, file_path: str, file_processor):
-        return file_processor(file_path, InfraredDatapoint)
+        return file_processor(file_path, InfraredMeasurement)
 
     def _read_folder_impl(self, folder_path, file_processor):
         return InfraredReader._read_folder_impl(folder_path, file_processor)
@@ -149,7 +149,7 @@ def test_read_file_valid(infrared_mock_data_reader, tmp_path):
     file_path.write_text("Wavenumber cm-1,00:00:29\n100,0.1\n200,0.2")
 
     datapoint = infrared_mock_data_reader.read_file(str(file_path))
-    assert isinstance(datapoint, InfraredDatapoint)
+    assert isinstance(datapoint, InfraredMeasurement)
 
 
 # def test_read_folder_valid(infrared_mock_data_reader, tmp_path):
@@ -158,7 +158,7 @@ def test_read_file_valid(infrared_mock_data_reader, tmp_path):
 #     (tmp_path / "test_dir" / "file.csv").write_text("Wavenumber cm-1,00:00:29\n100,0.1\n200,0.2")
 
 #     result = infrared_mock_data_reader._read_folder_impl((tmp_path / "test_dir"), CSVReaderMixin._process_csv)
-#     assert isinstance(result, InfraredDataSequence)  # Abstract, should use subclass in real test
+#     assert isinstance(result, InfraredMeasurementSequence)  # Abstract, should use subclass in real test
 
 
 def test_read_folder_invalid_extension_raises_value_error(infrared_mock_data_reader, tmp_path):
@@ -198,4 +198,4 @@ def test_read_folder(tmp_path):
     (tmp_path / "test_dir" / "file2.csv").write_text("Wavenumber cm-1,00:00:00\n100,0.1\n200,0.2")
 
     result = reader.read_folder(str(tmp_path / "test_dir"), reader.file_processors["csv"])
-    assert isinstance(result, InfraredDataSequence)
+    assert isinstance(result, InfraredMeasurementSequence)
