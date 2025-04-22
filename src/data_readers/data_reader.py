@@ -4,14 +4,16 @@ from typing import Callable, Type
 from datetime import timedelta
 import pandas as pd
 from src.data_readers.mixins.csv_reader_mixin import CSVReaderMixin
+from src.data_readers.mixins.jdx_reader_mixin import JCAMPDXReaderMixin
 from src.data_formats.spectroscopic_measurement import SpectroscopicMeasurement, SpectroscopicMeasurementSequence
 
 
-class DataReader(CSVReaderMixin, ABC
+class DataReader(CSVReaderMixin, JCAMPDXReaderMixin, ABC
                  ):
     def __init__(self):
         self.file_processors: dict[str, Callable[[str, Type[SpectroscopicMeasurement]], SpectroscopicMeasurement]] = {
             "csv": self._process_csv,
+            "jdx": self._process_jdx,
         }
 
     def _get_file_processor(

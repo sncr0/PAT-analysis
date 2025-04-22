@@ -22,13 +22,3 @@ class CSVReaderMixin(FormatMixin):
         measurement = measurement_class(csv_df)
         measurement.time = measurement_time
         return measurement
-
-
-class JCAMPDXReaderMixin(CSVReaderMixin):
-    def _process_jdx(
-            self,
-            file_path: str,
-            measurement_class: Type[SpectroscopicMeasurement]
-    ) -> tuple[pd.DataFrame, timedelta]:
-        path_prefix, filename = os.path.split(file_path)
-        jcamp = jcamp_readfile(os.path.join(path_prefix, filename))

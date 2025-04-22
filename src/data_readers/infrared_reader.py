@@ -4,10 +4,11 @@ from datetime import timedelta
 from typing import Callable, Type
 from src.data_readers.data_reader import DataReader
 from src.data_readers.mixins.csv_reader_mixin import CSVReaderMixin
+from src.data_readers.mixins.jdx_reader_mixin import JCAMPDXReaderMixin
 from src.data_formats.infrared_measurement import InfraredMeasurement, InfraredMeasurementSequence
 
 
-class InfraredReader(DataReader, CSVReaderMixin):
+class InfraredReader(DataReader, CSVReaderMixin, JCAMPDXReaderMixin):
     def __init__(self):
         super().__init__()
 
