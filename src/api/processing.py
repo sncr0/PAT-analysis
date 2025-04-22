@@ -4,7 +4,7 @@ import io
 import logging
 import matplotlib.pyplot as plt
 from fastapi.responses import StreamingResponse
-from src.database import SessionLocal, Spectrum
+from src.database.database import SessionLocal, Spectrum
 
 
 logger = logging.getLogger("processing")

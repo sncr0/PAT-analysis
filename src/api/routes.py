@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from src.api.authentication import verify_token
 from src.api.processing import process_spectrum, plot_latest_spectrum, upload_spectrum_to_db
 from contextlib import asynccontextmanager
-from src.database import init_db
+from src.database.database import init_db
 
 
 @asynccontextmanager
