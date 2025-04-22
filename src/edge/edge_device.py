@@ -3,7 +3,7 @@ import time
 
 from src.edge.config import SIMULATION, CSV_DATA_PATH
 from src.data_readers.infrared_reader import InfraredReader
-from src.data_formats.infrared_measurement import InfraredDatapoint
+from src.data_formats.infrared_measurement import InfraredMeasurement
 
 # # For live spectrometer reading.
 # from src.edge.spectrometer_interface import get_spectrum_data
@@ -14,7 +14,7 @@ from src.edge.cloud_client import send_datapoint
 from src.edge.database_client import commit_measurement_to_db
 
 
-def process_datapoint(datapoint: InfraredDatapoint):
+def process_datapoint(datapoint: InfraredMeasurement):
     """
     Process a single InfraredDatapoint.
     This function prints some basic information and sends the datapoint to the cloud.
@@ -30,7 +30,7 @@ def process_datapoint(datapoint: InfraredDatapoint):
     commit_measurement_to_db(datapoint)
 
 
-def run_simulation_mode():
+def run_simulation_mode_csv():
     """
     Continuously reads the "last" CSV file (based on modification time)
     from CSV_DATA_PATH, processes it into an InfraredDatapoint, and sends it to the cloud.
@@ -61,6 +61,18 @@ def run_simulation_mode():
 
         # Wait before sending the same file again.
         time.sleep(2)
+
+
+def run_simulation_mode():
+    infraread_reader = InfraredReader()
+
+    while True:
+        try:
+            acetone = infraread_reader.read_file('data/acetonitrile-acetone/67-64-1-IR.jdx')
+            commit_measurement_to_db(acetone)
+            time.sleep(3)
+        except Exception as e:
+            print("Error processing simulated file:", e)
 
 
 def run_live_mode():

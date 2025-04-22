@@ -1,6 +1,6 @@
 import json
 import requests
-from src.data_formats.infrared_datapoint import InfraredDatapoint
+from src.data_formats.infrared_measurement import InfraredMeasurement
 
 # Dummy endpoint URL for the hypothetical cloud API.
 CLOUD_API_URL = "http://localhost:8000/api/spectrum"
@@ -11,9 +11,9 @@ HEADERS = {
 }
 
 
-def send_datapoint(datapoint: InfraredDatapoint):
+def send_datapoint(datapoint: InfraredMeasurement):
     """
-    Convert the InfraredDatapoint to a JSON payload and send it via an HTTP POST
+    Convert the InfraredMeasurement to a JSON payload and send it via an HTTP POST
     to a cloud API endpoint with authentication.
     """
     data_records = datapoint.data.to_dict(orient="records")
