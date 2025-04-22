@@ -27,8 +27,8 @@ Base = declarative_base()
 
 
 # Sample ORM model
-class Spectrum(Base):
-    __tablename__ = "spectra"
+class Measurement(Base):
+    __tablename__ = "measurements"
 
     id = Column(Integer, primary_key=True, index=True)
     device_id = Column(String, nullable=False)

@@ -11,6 +11,7 @@ from src.data_formats.infrared_measurement import InfraredDatapoint
 
 # Import our cloud client.
 from src.edge.cloud_client import send_datapoint
+from src.edge.database_client import commit_measurement_to_db
 
 
 def process_datapoint(datapoint: InfraredDatapoint):
@@ -25,6 +26,8 @@ def process_datapoint(datapoint: InfraredDatapoint):
 
     # Simulate sending the datapoint to the cloud.
     send_datapoint(datapoint)
+    # Commit the datapoint to the database.
+    commit_measurement_to_db(datapoint)
 
 
 def run_simulation_mode():

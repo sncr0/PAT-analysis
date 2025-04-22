@@ -13,7 +13,7 @@ POSTGRES_DB := $(shell grep POSTGRES_DB $(ENV_FILE) | cut -d '=' -f2)
 POSTGRES_PASSWORD := $(shell grep POSTGRES_PASSWORD $(ENV_FILE) | cut -d '=' -f2)
 
 
-.PHONY: db-up db-down db-rebuild db-logs db-init db-connect
+.PHONY: db-up db-down db-rebuild db-logs db-init db-connect db-wipe wait-for-db
 
 db-up:
 	docker build -t $(DB_IMAGE_NAME) -f $(DB_DOCKERFILE) $(DB_CONTEXT)
@@ -28,7 +28,17 @@ db-down:
 	docker stop $(DB_CONTAINER_NAME) || true
 	docker rm $(DB_CONTAINER_NAME) || true
 
-db-rebuild: db-down db-up
+db-wipe:
+	docker volume rm $(VOLUME_NAME) || true
+
+wait-for-db:
+	@echo "⏳ Waiting for PostgreSQL container to become healthy..."
+	@until [ "$$(docker inspect -f '{{.State.Health.Status}}' $(DB_CONTAINER_NAME))" = "healthy" ]; do \
+		sleep 1; \
+	done
+	@echo "✅ PostgreSQL is healthy!"
+
+db-rebuild: db-down db-wipe db-up wait-for-db db-init
 
 db-logs:
 	docker logs -f $(DB_CONTAINER_NAME)
