@@ -13,7 +13,7 @@ POSTGRES_DB := $(shell grep POSTGRES_DB $(ENV_FILE) | cut -d '=' -f2)
 POSTGRES_PASSWORD := $(shell grep POSTGRES_PASSWORD $(ENV_FILE) | cut -d '=' -f2)
 
 
-.PHONY: db-up db-down db-rebuild db-logs
+.PHONY: db-up db-down db-rebuild db-logs db-init db-connect
 
 db-up:
 	docker build -t $(DB_IMAGE_NAME) -f $(DB_DOCKERFILE) $(DB_CONTEXT)
@@ -36,3 +36,6 @@ db-logs:
 db-connect:
 	@echo "Connecting to PostgreSQL as $(POSTGRES_USER) on $(POSTGRES_DB)..."
 	@PGPASSWORD=$(POSTGRES_PASSWORD) psql -h localhost -U $(POSTGRES_USER) -d $(POSTGRES_DB)
+
+db-init:
+	python -c "from src.database.database import init_db; init_db()"
