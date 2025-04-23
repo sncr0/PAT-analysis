@@ -7,8 +7,8 @@ DB_IMAGE_NAME=spectroscopy-db:local
 DB_CONTAINER_NAME=spectroscopy-db
 ENV_FILE=./config/.env
 VOLUME_NAME=spectroscopy-pgdata
-DB_DOCKERFILE=./src/database/Dockerfile
-DB_CONTEXT=./src/database
+DB_DOCKERFILE=./database/Dockerfile
+DB_CONTEXT=./database
 
 # Backend
 BACKEND_MODULE = backend.main
@@ -58,7 +58,7 @@ db-connect:
 	@PGPASSWORD=$(POSTGRES_PASSWORD) psql -h localhost -U $(POSTGRES_USER) -d $(POSTGRES_DB)
 
 db-init:
-	python -c "from src.database.database import init_db; init_db()"
+	python -c "from database.database import init_db; init_db()"
 
 # ========================================
 # BACKEND SERVER
@@ -74,3 +74,21 @@ backend-dev:
 
 backend-build:
 	@echo "Building backend assets (placeholder)"
+
+
+# ========================================
+# EDGE DEVICE
+# ========================================
+
+.PHONY: edge edge-sine edge-live
+
+edge:
+	PYTHONPATH=. python3 -m edge.edge_device
+
+edge-sine:
+	@echo "Running edge in sinusoidal simulation mode"
+	SIMULATION_SINE=true SIMULATION=false PYTHONPATH=. python3 -m edge.edge_device
+
+edge-live:
+	@echo "Running edge in live spectrometer mode"
+	SIMULATION=false SIMULATION_SINE=false PYTHONPATH=. python3 -m edge.edge_device
