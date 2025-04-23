@@ -1,0 +1,17 @@
+
+# ========================================
+# EDGE DEVICE
+# ========================================
+
+.PHONY: edge edge-sine edge-live
+
+edge:
+	PYTHONPATH=. python3 -m edge.edge_device
+
+edge-sine:
+	@echo "Running edge in sinusoidal simulation mode"
+	SIMULATION_SINE=true SIMULATION=false PYTHONPATH=. python3 -m edge.edge_device
+
+edge-live:
+	@echo "Running edge in live spectrometer mode"
+	SIMULATION=false SIMULATION_SINE=false PYTHONPATH=. python3 -m edge.edge_device

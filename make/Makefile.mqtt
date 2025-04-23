@@ -1,0 +1,9 @@
+
+# ========================================
+# MQTT LISTENER
+# ========================================
+
+.PHONY: mqtt-listener
+
+mqtt-listener:
+	python -m database.mqtt_listener

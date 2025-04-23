@@ -11,17 +11,18 @@ from config.config import PROJECT_HOME
 # ----------------------------------------------------------------------
 # Environment Setup
 # ----------------------------------------------------------------------
-
-
-# Load env variables from global/.env
-load_dotenv(dotenv_path=PROJECT_HOME)
+MODE = os.getenv("MODE", "dev")
+dotenv_path = os.path.join(PROJECT_HOME, f"config/database.{MODE}.env")
+load_dotenv(dotenv_path)
+print(dotenv_path)
+print(os.getenv("DB_HOST"))
 
 
 # Read variables with fallback for robustness
 DB_USER = os.getenv("POSTGRES_USER", "user")
 DB_PASS = os.getenv("POSTGRES_PASSWORD", "Password!1")
 DB_NAME = os.getenv("POSTGRES_DB", "spectroscopy")
-DB_HOST = os.getenv("DB_HOST", "localhost")
+DB_HOST = os.getenv("DB_HOST", "host.docker.internal")
 DB_PORT = os.getenv("DB_PORT", "5432")
 
 
@@ -32,7 +33,7 @@ DB_PORT = os.getenv("DB_PORT", "5432")
 
 # Full database URL
 DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-engine = create_engine(DATABASE_URL, echo=False)
+engine = create_engine(DATABASE_URL, echo=True)
 
 
 SessionLocal = sessionmaker(
