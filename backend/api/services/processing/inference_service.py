@@ -18,4 +18,5 @@ def predict_concentration(x: list[float], model_name) -> float:
     model = load_model(os.path.join(MODEL_DIR, model_path))
     X = np.array(x).reshape(1, -1)
     y_pred = model.predict(X).ravel()[0]
+    print(y_pred)
     return float(y_pred)
