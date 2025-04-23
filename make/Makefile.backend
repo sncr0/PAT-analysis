@@ -1,0 +1,75 @@
+# ========================================
+# BACKEND SERVER (Docker + Local)
+# ========================================
+
+# ----------- Mode & Defaults ------------
+MODE ?= dev
+
+BACKEND_ENV_FILE = ./config/backend.$(MODE).env
+BACKEND_MODULE = backend.main
+BACKEND_PORT = 8000
+DOCKER_BACKEND_IMAGE := pat-backend
+DOCKER_BACKEND_NAME := pat-backend
+DOCKER_BACKEND_PORT := 8000
+DOCKER_BACKEND_ENV := config/.env
+DOCKER_BACKEND_WORKDIR := /app/backend
+DOCKER_BACKEND_HOSTDIR := $(CURDIR)
+DOCKER_BACKEND_MOUNTS := \
+	-v $(DOCKER_BACKEND_HOSTDIR)/backend:/app/backend \
+	-v $(DOCKER_BACKEND_HOSTDIR)/core:/app/core \
+	-v $(DOCKER_BACKEND_HOSTDIR)/config:/app/config
+
+BACKEND_PORT := $(shell grep BACKEND_PORT $(BACKEND_ENV_FILE) | cut -d '=' -f2)
+BACKEND_MODULE := $(shell grep BACKEND_MODULE $(BACKEND_ENV_FILE) | cut -d '=' -f2)
+
+# -------------- Local ------------------
+.PHONY: backend-local-dev backend-local-build
+
+backend-local-run:
+	uvicorn $(BACKEND_MODULE):app --host 0.0.0.0 --port $(BACKEND_PORT)
+
+backend-local-dev:
+	uvicorn $(BACKEND_MODULE):app --reload --host 0.0.0.0 --port $(BACKEND_PORT)
+
+
+# -------------- Docker ------------------
+.PHONY: backend-docker-build backend-docker-run backend-docker-up backend-docker-down backend-docker-dev backend-docker-shell backend-docker-restart
+
+backend-docker-build: ## Build the backend Docker image
+	docker build -t $(DOCKER_BACKEND_IMAGE) -f backend/Dockerfile .
+	docker image prune -f --filter "dangling=true"
+
+
+backend-docker-run: ## Run the backend container
+	docker run --rm -it \
+		--name $(DOCKER_BACKEND_NAME) \
+		-p $(BACKEND_PORT):$(BACKEND_PORT) \
+		--env-file $(BACKEND_ENV_FILE) \
+		$(DOCKER_BACKEND_IMAGE)
+
+backend-docker-up: ## Run backend container in detached (background) mode (useful for CI/CD)
+	docker run -d \
+		--name $(DOCKER_BACKEND_NAME) \
+		-p $(BACKEND_PORT):$(BACKEND_PORT) \
+		--env-file $(BACKEND_ENV_FILE) \
+		$(DOCKER_BACKEND_IMAGE)
+
+backend-docker-down: ## Stop and remove the detached container
+	docker stop $(DOCKER_BACKEND_NAME) && docker rm $(DOCKER_BACKEND_NAME)
+
+backend-docker-dev: ## Start a dev container with live mounting and auto-reload
+	docker run --rm -it \
+		--name $(DOCKER_BACKEND_NAME) \
+		-p $(BACKEND_PORT):$(BACKEND_PORT) \
+		--env-file $(BACKEND_ENV_FILE) \
+		$(DOCKER_BACKEND_MOUNTS) \
+		-w $(DOCKER_BACKEND_WORKDIR) \
+		-e PYTHONPATH=/app \
+		$(DOCKER_BACKEND_IMAGE) \
+		uvicorn $(BACKEND_MODULE):app --reload --host 0.0.0.0 --port $(BACKEND_PORT)
+
+backend-docker-shell: ## Start an interactive shell inside the container for debugging
+	docker run -it --entrypoint /bin/sh --env-file $(DOCKER_BACKEND_ENV) $(DOCKER_BACKEND_IMAGE)
+
+backend-docker-restart: ## Build & run in one step (useful for fast local restart)
+	make backend-docker-build && make backend-docker-run

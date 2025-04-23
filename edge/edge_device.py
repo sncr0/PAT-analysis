@@ -35,6 +35,7 @@ def run_simulation_mode_sine():
     while True:
         try:
             concentration = 0.5 + 0.45 * (np.sin(i))
+            print(f"Concentration: {concentration:.2f}")
             time.sleep(0.1)
             i = i + 0.1
             spectrum = build_spectrum(concentration=concentration)

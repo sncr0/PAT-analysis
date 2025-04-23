@@ -1,0 +1,21 @@
+# ========================================
+# EDGE DEVICE
+# ========================================
+
+# ----------- Mode & Defaults ------------
+MODE ?= dev
+EDGE_ENV_FILE := ./config/edge.$(MODE).env
+
+# ----------- Targets --------------------
+.PHONY: edge edge-sine edge-live
+
+edge: ## ▶️ Run edge device in default mode (simulation file)
+	PYTHONPATH=. python3 -m edge.edge_device
+
+edge-sine: ## 🔁 Run edge device in sinusoidal simulation mode
+	@echo "Running edge in sinusoidal simulation mode"
+	SIMULATION_SINE=true SIMULATION=false PYTHONPATH=. python3 -m edge.edge_device
+
+edge-live: ## 🔬 Run edge device in live spectrometer mode
+	@echo "Running edge in live spectrometer mode"
+	SIMULATION=false SIMULATION_SINE=false PYTHONPATH=. python3 -m edge.edge_device

@@ -2,7 +2,7 @@ import json
 import logging
 import paho.mqtt.client as mqtt
 from datetime import datetime
-from database.database import SessionLocal, Measurement
+from db_gateway.database import SessionLocal, Measurement
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
