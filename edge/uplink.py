@@ -7,7 +7,7 @@ from core.data_formats.spectroscopic_measurement import SpectroscopicMeasurement
 from datetime import datetime
 
 
-def commit_measurement_to_db(measurement: SpectroscopicMeasurement, device_id: str = "Unknown"):
+def store_measurement(measurement: SpectroscopicMeasurement, device_id: str = "Unknown"):
     """
     Commit any SpectroscopicMeasurement (infrared or raman) to the database.
 

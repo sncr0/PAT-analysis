@@ -92,3 +92,12 @@ edge-sine:
 edge-live:
 	@echo "Running edge in live spectrometer mode"
 	SIMULATION=false SIMULATION_SINE=false PYTHONPATH=. python3 -m edge.edge_device
+
+# ========================================
+# MQTT LISTENER
+# ========================================
+
+.PHONY: mqtt-listener
+
+mqtt-listener:
+	python -m database.mqtt_listener
