@@ -1,6 +1,6 @@
 import os
 from typing import Type
-from datetime import timedelta, datetime
+from datetime import timedelta, datetime, timezone
 import pandas as pd
 from jcamp import jcamp_readfile
 from core.data_readers.mixins.format_mixin import FormatMixin
@@ -15,7 +15,7 @@ class JCAMPDXReaderMixin(FormatMixin):
     ) -> tuple[pd.DataFrame, timedelta]:
         path_prefix, filename = os.path.split(file_path)
         jcamp = jcamp_readfile(os.path.join(path_prefix, filename))
-        measurement_time = datetime.utcnow()
+        measurement_time = datetime.now(timezone.utc)
         measurement = measurement_class(jcamp)
         measurement.time = measurement_time
         return measurement
