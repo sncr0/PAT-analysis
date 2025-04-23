@@ -2,16 +2,15 @@
 # DATABASE
 # ========================================
 
-
 # ----------- Mode & Defaults ------------
 MODE ?= dev
 
-DATABASE_ENV_FILE   = ./config/database.$(MODE).env
-DB_IMAGE_NAME       = spectroscopy-db:$(MODE)
-DB_CONTAINER_NAME   = spectroscopy-db
-DB_DOCKERFILE       = ./database/Dockerfile
-DB_CONTEXT          = ./database
-VOLUME_NAME         = spectroscopy-pgdata
+DATABASE_ENV_FILE    = ./config/database.$(MODE).env
+DB_IMAGE_NAME        = spectroscopy-db:$(MODE)
+DB_CONTAINER_NAME    = spectroscopy-db
+DB_DOCKERFILE        = ./database/Dockerfile
+DB_CONTEXT           = ./database
+VOLUME_NAME          = spectroscopy-pgdata
 
 # Extract credentials from env file
 DB_USER := $(shell grep DB_USER $(DATABASE_ENV_FILE) | cut -d '=' -f2)
@@ -19,11 +18,25 @@ DB_NAME := $(shell grep DB_NAME $(DATABASE_ENV_FILE) | cut -d '=' -f2)
 DB_PASSWORD := $(shell grep DB_PASSWORD $(DATABASE_ENV_FILE) | cut -d '=' -f2)
 
 
+# ------------- Targets ------------------
 
-.PHONY: db-up db-down db-rebuild db-logs db-init db-connect db-wipe wait-for-db
+.PHONY: db-build db-run db-start db-stop db-remove db-wipe db-rebuild db-logs db-connect db-init wait-for-db
 
-db-up: ## Build and run the DB container based on current mode (MODE=dev or MODE=prod)
+db-build: ## 🔨 Build the PostgreSQL Docker image
 	docker build -t $(DB_IMAGE_NAME) -f $(DB_DOCKERFILE) $(DB_CONTEXT)
+
+db-run: ## 🚀 Run the container in foreground (useful for debugging)
+	docker run --rm -it \
+		--name $(DB_CONTAINER_NAME) \
+		--env-file $(DATABASE_ENV_FILE) \
+		-e POSTGRES_USER=$(DB_USER) \
+		-e POSTGRES_PASSWORD=$(DB_PASSWORD) \
+		-e POSTGRES_DB=$(DB_NAME) \
+		-p 5432:5432 \
+		-v $(VOLUME_NAME):/var/lib/postgresql/data \
+		$(DB_IMAGE_NAME)
+
+db-start: ## ▶️ Start the container in detached mode
 	docker run -d \
 		--name $(DB_CONTAINER_NAME) \
 		--env-file $(DATABASE_ENV_FILE) \
@@ -34,30 +47,32 @@ db-up: ## Build and run the DB container based on current mode (MODE=dev or MODE
 		-v $(VOLUME_NAME):/var/lib/postgresql/data \
 		$(DB_IMAGE_NAME)
 
-db-down: ## Stop and remove DB container
+db-stop: ## ⏹️ Stop container without removing it
 	docker stop $(DB_CONTAINER_NAME) || true
+
+db-remove: ## 🗑️ Remove the stopped container
 	docker rm $(DB_CONTAINER_NAME) || true
 
-db-wipe: ## Destroy volume
+db-wipe: ## 🔥 Remove database volume
 	docker volume rm $(VOLUME_NAME) || true
 
-wait-for-db: ## Wait for DB health check
+db-logs: ## 📜 Tail logs from DB container
+	docker logs -f $(DB_CONTAINER_NAME)
+
+wait-for-db: ## ⏳ Wait until DB is healthy
 	@echo "⏳ Waiting for PostgreSQL container to become healthy..."
 	@until [ "$$(docker inspect -f '{{.State.Health.Status}}' $(DB_CONTAINER_NAME))" = "healthy" ]; do \
 		sleep 1; \
 	done
 	@echo "✅ PostgreSQL is healthy!"
 
-db-rebuild: ## Full rebuild (drop, up, init)
-	db-down db-wipe db-up wait-for-db db-init
+db-rebuild: ## ♻️ Full teardown and start
+	make db-stop db-remove db-wipe db-build db-start wait-for-db db-init
 
-db-logs: ## Tail logs
-	docker logs -f $(DB_CONTAINER_NAME)
-
-db-connect: ## PSQL connect
-	@echo "Connecting to PostgreSQL as $(DB_USER) on $(DB_NAME)..."
-	@PGPASSWORD=$(DB_PASSWORD) psql -h localhost -U $(DB_USER) -d $(DB_NAME)
-
-db-init:
+db-init: ## 🧩 Initialize DB schema via SQLAlchemy
 	@echo "🔧 Initializing DB schema..."
 	@MODE=$(MODE) python3 -c "from database.database import init_db; init_db()"
+
+db-connect: ## 🔗 PSQL shell into DB
+	@echo "Connecting to PostgreSQL as $(DB_USER) on $(DB_NAME)..."
+	@PGPASSWORD=$(DB_PASSWORD) psql -h localhost -U $(DB_USER) -d $(DB_NAME)

@@ -1,9 +1,12 @@
-
 # ========================================
 # MQTT LISTENER
 # ========================================
 
+# ----------- Mode & Defaults ------------
+MODE ?= dev
+MQTT_ENV_FILE := ./config/mqtt.$(MODE).env
+
 .PHONY: mqtt-listener
 
-mqtt-listener:
+mqtt-listener: ## 📥 Run MQTT listener for incoming spectra
 	python -m database.mqtt_listener

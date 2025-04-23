@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from database.database import SessionLocal, Measurement
+from db_gateway.database import SessionLocal, Measurement
 from core.data_formats.infrared_measurement import InfraredMeasurement, InfraredMeasurementSequence
 import pandas as pd
 import json

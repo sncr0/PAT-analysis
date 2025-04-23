@@ -2,7 +2,7 @@
 
 import traceback
 
-from database.database import SessionLocal, Measurement
+from db_gateway.database import SessionLocal, Measurement
 from core.data_formats.spectroscopic_measurement import SpectroscopicMeasurement
 from datetime import datetime
 
