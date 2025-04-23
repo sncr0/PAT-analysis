@@ -1,10 +1,10 @@
 import pytest
 import os
 import pandas as pd
-from src.data_readers.data_reader import DataReader
-from src.data_readers.infrared_reader import InfraredReader
-from src.data_formats.infrared_measurement import InfraredMeasurement, InfraredMeasurementSequence
-from src.data_readers.mixins.csv_reader_mixin import CSVReaderMixin
+from core.data_readers.data_reader import DataReader
+from core.data_readers.infrared_reader import InfraredReader
+from core.data_formats.infrared_measurement import InfraredMeasurement, InfraredMeasurementSequence
+from core.data_readers.mixins.csv_reader_mixin import CSVReaderMixin
 
 
 class InfraredMockDataReader(DataReader):

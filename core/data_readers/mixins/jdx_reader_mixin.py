@@ -3,8 +3,8 @@ from typing import Type
 from datetime import timedelta, datetime
 import pandas as pd
 from jcamp import jcamp_readfile
-from src.data_readers.mixins.format_mixin import FormatMixin
-from src.data_formats.spectroscopic_measurement import SpectroscopicMeasurement, SpectroscopicMeasurementSequence
+from core.data_readers.mixins.format_mixin import FormatMixin
+from core.data_formats.spectroscopic_measurement import SpectroscopicMeasurement, SpectroscopicMeasurementSequence
 
 
 class JCAMPDXReaderMixin(FormatMixin):

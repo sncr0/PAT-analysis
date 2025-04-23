@@ -2,10 +2,10 @@ import os
 import pandas as pd
 from datetime import timedelta
 from typing import Callable, Type
-from src.data_readers.data_reader import DataReader
-from src.data_readers.mixins.csv_reader_mixin import CSVReaderMixin
-from src.data_readers.mixins.jdx_reader_mixin import JCAMPDXReaderMixin
-from src.data_formats.infrared_measurement import InfraredMeasurement, InfraredMeasurementSequence
+from core.data_readers.data_reader import DataReader
+from core.data_readers.mixins.csv_reader_mixin import CSVReaderMixin
+from core.data_readers.mixins.jdx_reader_mixin import JCAMPDXReaderMixin
+from core.data_formats.infrared_measurement import InfraredMeasurement, InfraredMeasurementSequence
 
 
 class InfraredReader(DataReader, CSVReaderMixin, JCAMPDXReaderMixin):

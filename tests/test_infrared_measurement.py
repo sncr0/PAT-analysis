@@ -1,9 +1,9 @@
 import pytest
 import pandas as pd
 from datetime import timedelta
-from src.data_formats.spectroscopic_measurement import SpectroscopicMeasurement, SpectroscopicMeasurementSequence
-from src.data_formats.infrared_measurement import InfraredMeasurement, InfraredMeasurementSequence
-from src.data_formats.raman_measurement import RamanMeasurement, RamanMeasurementSequence
+from core.data_formats.spectroscopic_measurement import SpectroscopicMeasurement, SpectroscopicMeasurementSequence
+from core.data_formats.infrared_measurement import InfraredMeasurement, InfraredMeasurementSequence
+from core.data_formats.raman_measurement import RamanMeasurement, RamanMeasurementSequence
 
 
 def test_spectroscopic_datapoint_initialization():

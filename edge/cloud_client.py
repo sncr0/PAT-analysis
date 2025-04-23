@@ -1,6 +1,6 @@
 import json
 import requests
-from src.data_formats.infrared_measurement import InfraredMeasurement
+from core.data_formats.infrared_measurement import InfraredMeasurement
 
 # Dummy endpoint URL for the hypothetical cloud API.
 CLOUD_API_URL = "http://localhost:8000/api/spectrum"

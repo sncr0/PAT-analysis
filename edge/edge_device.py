@@ -1,17 +1,17 @@
 import os
 import time
 
-from src.edge.config import SIMULATION, CSV_DATA_PATH
-from src.data_readers.infrared_reader import InfraredReader
-from src.data_formats.infrared_measurement import InfraredMeasurement
+from edge.config import SIMULATION, CSV_DATA_PATH
+from core.data_readers.infrared_reader import InfraredReader
+from core.data_formats.infrared_measurement import InfraredMeasurement
 
 # # For live spectrometer reading.
 # from src.edge.spectrometer_interface import get_spectrum_data
 
 
 # Import our cloud client.
-from src.edge.cloud_client import send_datapoint
-from src.edge.database_client import commit_measurement_to_db
+from edge.cloud_client import send_datapoint
+from edge.database_client import commit_measurement_to_db
 
 
 def process_datapoint(datapoint: InfraredMeasurement):
