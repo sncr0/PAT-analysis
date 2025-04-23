@@ -13,7 +13,8 @@ from edge.utils import build_spectrum
 
 # Import our cloud client.
 from edge.cloud_client import send_datapoint
-from edge.database_client import commit_measurement_to_db
+from edge.uplink import store_measurement
+from edge.mqtt_uplink import publish_measurement
 
 
 def process_datapoint(datapoint: InfraredMeasurement):
@@ -29,7 +30,7 @@ def process_datapoint(datapoint: InfraredMeasurement):
     # Simulate sending the datapoint to the cloud.
     send_datapoint(datapoint)
     # Commit the datapoint to the database.
-    commit_measurement_to_db(datapoint)
+    store_measurement(datapoint)
 
 
 def run_simulation_mode_csv():
@@ -71,7 +72,7 @@ def run_simulation_mode():
     while True:
         try:
             acetone = infraread_reader.read_file('data/acetonitrile-acetone/67-64-1-IR.jdx')
-            commit_measurement_to_db(acetone)
+            store_measurement(acetone)
             time.sleep(3)
         except Exception as e:
             print("Error processing simulated file:", e)
@@ -86,7 +87,8 @@ def run_simulation_mode_sine():
             time.sleep(0.1)
             i = i + 0.1
             spectrum = build_spectrum(concentration=concentration)
-            commit_measurement_to_db(spectrum)
+
+            publish_measurement(spectrum)
             time.sleep(3)
         except Exception as e:
             print("Error processing simulated file:", e)

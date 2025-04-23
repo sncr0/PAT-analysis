@@ -16,10 +16,12 @@ DEFAULT_CSV_FOLDER = os.path.abspath(
 )
 CSV_DATA_PATH = os.getenv("CSV_DATA_PATH", DEFAULT_CSV_FOLDER)
 
-# (Optional) Cloud client settings—e.g. endpoint URL or API key.
-# Uncomment & customize if needed:
-# CLOUD_ENDPOINT = os.getenv("CLOUD_ENDPOINT", "https://your-cloud-endpoint")
-# CLOUD_API_KEY  = os.getenv("CLOUD_API_KEY", "")
+
+# --- MQTT Broker Settings ---
+MQTT_BROKER = os.getenv("MQTT_BROKER", "localhost")
+MQTT_PORT = int(os.getenv("MQTT_PORT", "1883"))
+MQTT_TOPIC = os.getenv("MQTT_TOPIC", "spectroscopy/measurements")
+
 
 # ------------------------------------------------------------------------------
 # End of config
