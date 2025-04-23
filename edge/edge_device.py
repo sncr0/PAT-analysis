@@ -1,9 +1,11 @@
 import os
 import time
+import numpy as np
 
-from edge.config import SIMULATION, CSV_DATA_PATH
+from edge.config import SIMULATION, SIMULATION_SINE, CSV_DATA_PATH
 from core.data_readers.infrared_reader import InfraredReader
 from core.data_formats.infrared_measurement import InfraredMeasurement
+from edge.utils import build_spectrum
 
 # # For live spectrometer reading.
 # from src.edge.spectrometer_interface import get_spectrum_data
@@ -75,6 +77,21 @@ def run_simulation_mode():
             print("Error processing simulated file:", e)
 
 
+def run_simulation_mode_sine():
+    print("Running in SIMULATION mode (using sine wave).")
+    i = 0
+    while True:
+        try:
+            concentration = 0.5 + 0.45 * (np.sin(i))
+            time.sleep(0.1)
+            i = i + 0.1
+            spectrum = build_spectrum(concentration=concentration)
+            commit_measurement_to_db(spectrum)
+            time.sleep(3)
+        except Exception as e:
+            print("Error processing simulated file:", e)
+
+
 def run_live_mode():
     """
     In live mode, continuously read data from the spectrometer, wrap it as an InfraredDatapoint,
@@ -97,6 +114,8 @@ def run_live_mode():
 def main():
     if SIMULATION:
         run_simulation_mode()
+    if SIMULATION_SINE:
+        run_simulation_mode_sine()
     else:
         run_live_mode()
 

@@ -6,7 +6,8 @@ import os
 
 # If True, run in “simulation” mode (read CSVs).
 # To override, set the environment variable SIMULATION=0 or SIMULATION=false.
-SIMULATION = os.getenv("SIMULATION", "1").lower() in ("1", "true", "yes")
+SIMULATION = os.getenv("SIMULATION", "0").lower() in ("1", "true", "yes")
+SIMULATION_SINE = os.getenv("SIMULATION_SINE", "1").lower() in ("1", "true", "yes")
 
 # Folder where your simulated CSV spectra live.
 # To override, set CSV_DATA_PATH=/absolute/or/relative/path

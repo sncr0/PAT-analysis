@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from backend.api.routes import router as api_router
+from backend.api.routes.infrared_routes import router as api_router
+from backend.api.routes.processing_routes import router as processing_router
+from backend.api.routes.measurement_routes import router as measurement_router
 
 app = FastAPI()
 
@@ -29,3 +31,7 @@ def landing():
 
 
 app.include_router(api_router, prefix="/api")
+
+app.include_router(processing_router, prefix="/process")
+
+app.include_router(measurement_router, prefix="/measurements")
