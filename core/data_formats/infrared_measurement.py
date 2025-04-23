@@ -1,5 +1,5 @@
 import pandas as pd
-from src.data_formats.spectroscopic_measurement import SpectroscopicMeasurement, SpectroscopicMeasurementSequence
+from core.data_formats.spectroscopic_measurement import SpectroscopicMeasurement, SpectroscopicMeasurementSequence
 
 
 class InfraredMeasurement(SpectroscopicMeasurement):

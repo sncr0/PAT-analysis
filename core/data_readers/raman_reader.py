@@ -2,9 +2,9 @@ import os
 import pandas as pd
 from datetime import timedelta
 from typing import Callable, Type
-from src.data_readers.data_reader import DataReader
-from src.data_readers.mixins.csv_reader_mixin import CSVReaderMixin
-from src.data_formats.raman_measurement import RamanMeasurement, RamanMeasurementSequence
+from core.data_readers.data_reader import DataReader
+from core.data_readers.mixins.csv_reader_mixin import CSVReaderMixin
+from core.data_formats.raman_measurement import RamanMeasurement, RamanMeasurementSequence
 
 
 class RamanReader(DataReader, CSVReaderMixin):

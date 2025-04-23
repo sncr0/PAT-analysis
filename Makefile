@@ -1,17 +1,27 @@
-# Makefile
+# ========================================
+# CONFIGURATION
+# ========================================
 
+# Database
 DB_IMAGE_NAME=spectroscopy-db:local
 DB_CONTAINER_NAME=spectroscopy-db
-ENV_FILE=./global/.env
+ENV_FILE=./config/.env
 VOLUME_NAME=spectroscopy-pgdata
 DB_DOCKERFILE=./src/database/Dockerfile
 DB_CONTEXT=./src/database
 
+# Backend
+BACKEND_MODULE = backend.main
+BACKEND_PORT = 8000
 
+# Extracted from env file
 POSTGRES_USER := $(shell grep POSTGRES_USER $(ENV_FILE) | cut -d '=' -f2)
 POSTGRES_DB := $(shell grep POSTGRES_DB $(ENV_FILE) | cut -d '=' -f2)
 POSTGRES_PASSWORD := $(shell grep POSTGRES_PASSWORD $(ENV_FILE) | cut -d '=' -f2)
 
+# ========================================
+# DATABASE
+# ========================================
 
 .PHONY: db-up db-down db-rebuild db-logs db-init db-connect db-wipe wait-for-db
 
@@ -49,3 +59,18 @@ db-connect:
 
 db-init:
 	python -c "from src.database.database import init_db; init_db()"
+
+# ========================================
+# BACKEND SERVER
+# ========================================
+
+.PHONY: backend-run backend-dev backend-build
+
+backend-run:
+	uvicorn $(BACKEND_MODULE):app --host 0.0.0.0 --port $(BACKEND_PORT)
+
+backend-dev:
+	uvicorn $(BACKEND_MODULE):app --reload --host 0.0.0.0 --port $(BACKEND_PORT)
+
+backend-build:
+	@echo "Building backend assets (placeholder)"

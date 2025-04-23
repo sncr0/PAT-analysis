@@ -2,8 +2,8 @@
 
 import traceback
 
-from src.database.database import SessionLocal, Measurement
-from src.data_formats.spectroscopic_measurement import SpectroscopicMeasurement
+from database.database import SessionLocal, Measurement
+from core.data_formats.spectroscopic_measurement import SpectroscopicMeasurement
 from datetime import datetime
 
 

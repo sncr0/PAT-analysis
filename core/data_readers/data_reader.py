@@ -3,9 +3,9 @@ import os
 from typing import Callable, Type
 from datetime import timedelta
 import pandas as pd
-from src.data_readers.mixins.csv_reader_mixin import CSVReaderMixin
-from src.data_readers.mixins.jdx_reader_mixin import JCAMPDXReaderMixin
-from src.data_formats.spectroscopic_measurement import SpectroscopicMeasurement, SpectroscopicMeasurementSequence
+from core.data_readers.mixins.csv_reader_mixin import CSVReaderMixin
+from core.data_readers.mixins.jdx_reader_mixin import JCAMPDXReaderMixin
+from core.data_formats.spectroscopic_measurement import SpectroscopicMeasurement, SpectroscopicMeasurementSequence
 
 
 class DataReader(CSVReaderMixin, JCAMPDXReaderMixin, ABC
