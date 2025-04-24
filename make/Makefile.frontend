@@ -1,0 +1,43 @@
+# ========================================
+# FRONTEND (Vite + Nginx)
+# ========================================
+
+MODE ?= dev
+FRONTEND_ENV_FILE := ./config/frontend.$(MODE).env
+
+FRONTEND_IMAGE = frontend-ui:$(MODE)
+FRONTEND_CONTAINER = frontend-ui
+FRONTEND_DOCKERFILE = ./frontend/Dockerfile
+FRONTEND_CONTEXT = ./frontend
+
+
+FRONTEND_PORT := $(shell grep FRONTEND_PORT $(FRONTEND_ENV_FILE) | cut -d '=' -f2)
+
+
+.PHONY: frontend-build frontend-up frontend-run frontend-down frontend-shell frontend-dev frontend-restart
+
+frontend-build: ## 🐳 Build the frontend Docker image
+	docker build -t $(FRONTEND_IMAGE) -f $(FRONTEND_DOCKERFILE) $(FRONTEND_CONTEXT)
+
+frontend-up: ## 🚀 Run frontend container (detached)
+	docker run -d \
+		--name $(FRONTEND_CONTAINER) \
+		--env-file $(FRONTEND_ENV_FILE) \
+		-p 80:80 \
+		$(FRONTEND_IMAGE)
+
+frontend-run: ## 🧪 Run interactively (optional, rare use)
+	docker run --rm -it \
+		--env-file $(FRONTEND_ENV_FILE) \
+		-p 80:80 \
+		$(FRONTEND_IMAGE)
+
+frontend-down: ## 🛑 Stop and remove container
+	-docker stop $(FRONTEND_CONTAINER)
+	-docker rm $(FRONTEND_CONTAINER)
+
+frontend-shell: ## 🐚 Open shell inside container
+	docker exec -it $(FRONTEND_CONTAINER) /bin/sh
+
+frontend-rebuild: ## 🔄 Rebuild & restart
+	frontend-down frontend-build frontend-up
