@@ -1,42 +1,33 @@
+import os
 import json
 import logging
-import paho.mqtt.client as mqtt
+import signal
 from datetime import datetime
-from db_gateway.database import SessionLocal, Measurement
+import paho.mqtt.client as mqtt
+from db_gateway.engine import SessionLocal
+from db_gateway.models.measurement import Measurement
+from db_gateway.config import MQTT_BROKER, MQTT_PORT, MQTT_TOPIC
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("mqtt-listener")
+
+# Graceful shutdown support
+client = mqtt.Client()
 
 
-# Configurable constants (you can later load from .env or config.py)
-MQTT_BROKER = "localhost"
-MQTT_PORT = 1883
-MQTT_TOPIC = "spectroscopy/measurements"
-
-
-def on_message(client, userdata, msg):
-    """
-    Callback function that is triggered when a message is received on the subscribed topic.
-    Parses the payload and stores it in the database.
-    """
+def on_message(_client, _userdata, msg):
     logger.info(f"📥 Received message on topic '{msg.topic}'")
     session = SessionLocal()
-
     try:
         payload = json.loads(msg.payload.decode("utf-8"))
         spectrum = payload["spectrum"]
-        timestamp = datetime.fromisoformat(payload["timestamp"]) if payload.get("timestamp") else datetime.utcnow()
-        device_id = payload.get("device_id", "Unknown")
+        timestamp = datetime.fromisoformat(payload.get("timestamp")) if "timestamp" in payload else datetime.utcnow()
+        device_id = payload.get("device_id", "unknown")
 
-        db_row = Measurement(
-            device_id=device_id,
-            timestamp=timestamp,
-            spectrum=spectrum
-        )
-        session.add(db_row)
+        session.add(Measurement(device_id=device_id, timestamp=timestamp, spectrum=spectrum))
         session.commit()
-        logger.info(f"✅ Stored MQTT measurement for device '{device_id}' at {timestamp.isoformat()}")
+        logger.info(f"✅ Stored measurement from '{device_id}' at {timestamp.isoformat()}")
 
     except Exception as e:
         logger.error(f"❌ Failed to store MQTT data: {e}", exc_info=True)
@@ -45,21 +36,24 @@ def on_message(client, userdata, msg):
         session.close()
 
 
-def start_listener(broker: str = MQTT_BROKER, port: int = MQTT_PORT, topic: str = MQTT_TOPIC):
+def handle_shutdown(signum, frame):
+    logger.warning("🛑 Shutdown signal received, disconnecting MQTT client...")
+    client.disconnect()
+
+
+def start(broker: str = MQTT_BROKER, port: int = MQTT_PORT, topic: str = MQTT_TOPIC):
     """
-    Connects to the MQTT broker and listens for incoming messages on the specified topic.
+    Entry point to start the MQTT listener.
     """
-    client = mqtt.Client()
     client.on_message = on_message
+    signal.signal(signal.SIGINT, handle_shutdown)
+    signal.signal(signal.SIGTERM, handle_shutdown)
 
     try:
+        logger.info(f"📡 Connecting to MQTT broker at {broker}:{port}...")
         client.connect(broker, port)
         client.subscribe(topic)
-        logger.info(f"🔄 Subscribed to MQTT topic '{topic}' at {broker}:{port}")
+        logger.info(f"🔄 Subscribed to '{topic}', listening for messages...")
         client.loop_forever()
     except Exception as e:
-        logger.critical(f"❌ MQTT Listener failed to start: {e}", exc_info=True)
-
-
-if __name__ == "__main__":
-    start_listener()
+        logger.critical(f"❌ MQTT Listener crashed: {e}", exc_info=True)

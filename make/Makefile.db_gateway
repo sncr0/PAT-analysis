@@ -1,0 +1,67 @@
+# ========================================
+# DB GATEWAY (MQTT Listener + DB Init)
+# ========================================
+
+# ----------- Mode & Defaults ------------
+MODE ?= dev
+DB_GATEWAY_ENV_FILE := ./config/db_gateway.$(MODE).env
+
+DB_GATEWAY_IMAGE       = db-gateway:$(MODE)
+DB_GATEWAY_CONTAINER   = db-gateway
+DB_GATEWAY_DOCKERFILE  = ./db_gateway/Dockerfile
+DB_GATEWAY_CONTEXT     = .
+
+DB_GATEWAY_MOUNTS := \
+	-v $(CURDIR)/db_gateway:/app/db_gateway \
+	-v $(CURDIR)/core:/app/core \
+	-v $(CURDIR)/config:/app/config
+
+.PHONY: db-gateway-build db-gateway-up db-gateway-down db-gateway-shell db-gateway-init db-gateway-mqtt db-gateway-dev
+
+db-gateway-build: ## 🐳 Build the DB Gateway Docker image
+	docker build -t $(DB_GATEWAY_IMAGE) -f $(DB_GATEWAY_DOCKERFILE) $(DB_GATEWAY_CONTEXT)
+
+db-gateway-run: ## 🚀 Run container in foreground (interactive)
+	docker run --rm -it \
+		--name $(DB_GATEWAY_CONTAINER) \
+		--env-file $(DB_GATEWAY_ENV_FILE) \
+		-e PYTHONPATH=/app \
+		$(DB_GATEWAY_IMAGE) \
+		sleep infinity
+
+db-gateway-up: ## 🚀 Run container in detached mode
+	docker run -d \
+		--name $(DB_GATEWAY_CONTAINER) \
+		--env-file $(DB_GATEWAY_ENV_FILE) \
+		-e PYTHONPATH=/app \
+		$(DB_GATEWAY_IMAGE) \
+		sleep infinity
+
+db-gateway-down: ## 🛑 Stop and remove gateway container
+	-docker stop --time=0 $(DB_GATEWAY_CONTAINER)
+	-docker rm $(DB_GATEWAY_CONTAINER)
+
+db-gateway-shell: ## 🐚 Open shell inside running gateway container
+	docker exec -it $(DB_GATEWAY_CONTAINER) /bin/sh
+
+db-gateway-init: ## 🧠 Init DB schema via gateway
+	docker exec -e PYTHONPATH=/app -it $(DB_GATEWAY_CONTAINER) python db_gateway/main.py init-db
+
+db-gateway-mqtt: ## 📥 Start MQTT listener inside gateway
+	docker exec -e PYTHONPATH=/app -it $(DB_GATEWAY_CONTAINER) python db_gateway/main.py mqtt
+
+db-gateway-rebuild: ## ♻️ Rebuild image and restart container
+	make db-gateway-down
+	docker rmi -f $(DB_GATEWAY_IMAGE) || true
+	make db-gateway-build
+	make db-gateway-up
+
+db-gateway-dev: ## 🔁 Run dev container with mounted volumes
+	docker run --rm -it \
+		--name $(DB_GATEWAY_CONTAINER) \
+		--env-file $(DB_GATEWAY_ENV_FILE) \
+		$(DB_GATEWAY_MOUNTS) \
+		-w /app/db_gateway \
+		-e PYTHONPATH=/app \
+		$(DB_GATEWAY_IMAGE) \
+		python -m $(DB_GATEWAY_MODULE) mqtt

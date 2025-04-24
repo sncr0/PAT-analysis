@@ -1,7 +1,8 @@
 include make/Makefile.database
 include make/Makefile.backend
 include make/Makefile.edge
-include make/Makefile.mqtt
+include make/Makefile.db_gateway
+include make/Makefile.frontend
 
 .PHONY: help
 help:
