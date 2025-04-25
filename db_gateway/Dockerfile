@@ -46,9 +46,22 @@ WORKDIR /app
 
 # Install PostgreSQL client and other required dependencies
 RUN apt-get update -qq && apt-get install -y -qq postgresql-client curl && rm -rf /var/lib/apt/lists/*
+# RUN apt-get update -qq && apt-get install -y -qq postgresql-client curl python3 python3-pip && rm -rf /var/lib/apt/lists/*
 
-# Install PostgreSQL client and other required dependencies
+
+# # Create a Python virtual environment
+# RUN python3 -m venv /venv
+
+# # Upgrade pip inside the virtual environment
+# RUN /venv/bin/pip install --upgrade pip
+COPY ./db_gateway/requirements.txt ./
+RUN pip install -r requirements.txt --break-system-packages
+
+# # Copy the application files
 COPY . .
+
+# # Install Python dependencies inside the virtual environment
+# RUN /venv/bin/pip install -r ./db_gateway/requirements.txt
 
 # Download and prepare the Cloud SQL Proxy binary
 RUN curl -sSL -o /cloud_sql_proxy https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.10.1/cloud-sql-proxy.linux.amd64

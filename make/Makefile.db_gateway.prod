@@ -71,7 +71,7 @@ db-gateway-shell: ## 🐚 Open shell inside running gateway container
 	docker exec -it $(DB_GATEWAY_CONTAINER) /bin/sh
 
 db-gateway-init: ## 🧠 Init DB schema via gateway
-	docker exec -e PYTHONPATH=/app -it $(DB_GATEWAY_CONTAINER) python db_gateway/main.py init-db
+	docker exec -e PYTHONPATH=/app -it $(DB_GATEWAY_CONTAINER) python3 db_gateway/main.py init-db
 
 db-gateway-mqtt: ## 📥 Start MQTT listener inside gateway
 	docker exec -e PYTHONPATH=/app -it $(DB_GATEWAY_CONTAINER) python db_gateway/main.py mqtt
