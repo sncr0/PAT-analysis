@@ -7,7 +7,7 @@ MODE ?= dev
 DB_GATEWAY_ENV_FILE := ./config/db_gateway.$(MODE).env
 
 DB_GATEWAY_IMAGE       = db-gateway:$(MODE)
-DB_GATEWAY_CONTAINER   = db-gateway
+DB_GATEWAY_CONTAINER   = db-gateway-$(MODE)
 DB_GATEWAY_DOCKERFILE  = ./db_gateway/Dockerfile
 DB_GATEWAY_CONTEXT     = .
 
