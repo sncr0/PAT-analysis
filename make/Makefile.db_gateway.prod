@@ -50,6 +50,7 @@ db-gateway-up: ## 🚀 Run container in detached mode
 		--name $(DB_GATEWAY_CONTAINER) \
 		--env-file $(DB_GATEWAY_ENV_FILE) \
 		-e PYTHONPATH=/app \
+		--add-host=host.docker.internal:host-gateway \
 		$(DB_GATEWAY_IMAGE) \
 		sleep infinity
 
