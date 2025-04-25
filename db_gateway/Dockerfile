@@ -41,34 +41,30 @@ CMD ["tail", "-f", "/dev/null"]
 
 FROM google/cloud-sdk:slim as prod
 
+# Set working directory
 WORKDIR /app
 
-# Install PostgreSQL client (required for production)
-RUN apt-get update && apt-get install -y postgresql-client && rm -rf /var/lib/apt/lists/*
+# Install PostgreSQL client and other required dependencies
+RUN apt-get update -qq && apt-get install -y -qq postgresql-client curl && rm -rf /var/lib/apt/lists/*
 
-
+# Install PostgreSQL client and other required dependencies
 COPY . .
 
+# Download and prepare the Cloud SQL Proxy binary
+RUN curl -sSL -o /cloud_sql_proxy https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.10.1/cloud-sql-proxy.linux.amd64
+RUN chmod +x /cloud_sql_proxy
 
 # Copy and prepare the Cloud SQL Proxy setup script
 COPY ./db_gateway/setup_proxy.sh /setup_proxy.sh
 RUN chmod +x /setup_proxy.sh
 
-# Authenticate with Google Cloud
+# Authenticate with Google Cloud using the service account credentials
 COPY ./config/gcp-creds.json /config/gcp-creds.json
 RUN gcloud auth activate-service-account --key-file=/config/gcp-creds.json
 
+# Accept PROJECT_ID as an argument at build time and set it for gcloud
 ARG PROJECT_ID
-# Set the default project for gcloud
 RUN gcloud config set project $PROJECT_ID
 
-# Command to run the setup script and then keep the container alive
-CMD ["/bin/sh", "-c", "\
-    echo '📦 Starting container in MODE=$MODE' && \
-    if [ \"$MODE\" = \"prod\" ]; then \
-      echo '🔐 Setting up Cloud SQL Proxy...' && \
-      /setup_proxy.sh ; \
-    else \
-      echo '🧪 Dev mode: skipping Cloud SQL Proxy setup' ; \
-    fi && \
-    tail -f /dev/null"]
+# Default command: run the setup script and then keep the container alive
+CMD ["/bin/sh", "-c", "/setup_proxy.sh && tail -f /dev/null"]
