@@ -33,12 +33,22 @@ FROM base AS dev
 CMD ["tail", "-f", "/dev/null"]
 
 
+
+
+
+
+
+
 FROM google/cloud-sdk:slim as prod
 
 WORKDIR /app
 
 # Install PostgreSQL client (required for production)
 RUN apt-get update && apt-get install -y postgresql-client && rm -rf /var/lib/apt/lists/*
+
+
+COPY . .
+
 
 # Copy and prepare the Cloud SQL Proxy setup script
 COPY ./db_gateway/setup_proxy.sh /setup_proxy.sh

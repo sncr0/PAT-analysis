@@ -1,7 +1,7 @@
 #!/bin/sh
 
 echo "📦 DB Gateway container booting in MODE=$MODE"
-
+echo "instance name: $CLOUD_SQL_INSTANCE_CONNECTION_NAME"
 if [ "$MODE" = "prod" ]; then
   echo "🔐 Setting up Cloud SQL Proxy..."
 
@@ -9,15 +9,13 @@ if [ "$MODE" = "prod" ]; then
   curl -sSL -o /cloud_sql_proxy https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.10.1/cloud-sql-proxy.linux.amd64
   chmod +x /cloud_sql_proxy
 
-  echo "🔌 Starting Cloud SQL Proxy for $CLOUD_SQL_INSTANCE..."
+  echo "🔌 Starting Cloud SQL Proxy for $CLOUD_SQL_INSTANCE_CONNECTION_NAME..."
   rm -f .db_proxy.log .db_proxy.pid
-    stdbuf -oL /cloud_sql_proxy \
-      -dir=/cloudsql \
-      -instances="$CLOUD_SQL_INSTANCE"=tcp:5432 \
-      -credential_file="$GOOGLE_APPLICATION_CREDENTIALS" > .db_proxy.log 2>&1 & echo $$! > .db_proxy.pid
-
-    # Wait for the proxy to be ready
-    tail -n +1 -f .db_proxy.log | sed '/ready for new connections/ q'
+  stdbuf -oL /cloud_sql_proxy $CLOUD_SQL_INSTANCE_CONNECTION_NAME \
+    --credentials-file=config/gcp-creds.json \
+    --address=0.0.0.0 \
+    --port=5432 > .db_proxy.log 2>&1 & echo $$! > .db_proxy.pid
+  tail -n +1 -f .db_proxy.log | sed '/ready for new connections/ q'
 
   PROXY_PID=$!
 
