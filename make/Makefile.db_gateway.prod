@@ -5,6 +5,7 @@
 # ----------- Mode & Defaults ------------
 MODE ?= dev
 DB_GATEWAY_ENV_FILE := ./config/db_gateway.$(MODE).env
+DATABASE_ENV_FILE := ./config/database.${MODE}.env
 
 DB_GATEWAY_IMAGE       = db-gateway:$(MODE)
 DB_GATEWAY_CONTAINER   = db-gateway-$(MODE)
@@ -19,12 +20,19 @@ DB_GATEWAY_MOUNTS := \
 
 .PHONY: db-proxy-up db-proxy-down
 
-CLOUD_SQL_INSTANCE := $(shell gcloud sql instances describe spectroscopy-database --format="value(connectionName)")
+# CLOUD_SQL_INSTANCE := $(shell gcloud sql instances describe spectroscopy-database --format="value(connectionName)")
+# CLOUD_SQL_INSTANCE := swift-hangar-452217-q7:us-central1:spectroscopy-database
+
+PROJECT_ID := $(shell grep PROJECT_ID $(DATABASE_ENV_FILE) | cut -d '=' -f2)
+REGION := $(shell grep REGION $(DATABASE_ENV_FILE) | cut -d '=' -f2)
+INSTANCE_ID := $(shell grep DNSTANCE_ID $(DATABASE_ENV_FILE) | cut -d '=' -f2)
+CLOUD_SQL_INSTANCE_CONNECTION_NAME := $(shell grep CLOUD_SQL_INSTANCE_CONNECTION_NAME $(DATABASE_ENV_FILE) | cut -d '=' -f2)
+
 
 db-proxy-up: ## 🔌 Start Cloud SQL Proxy for local access to remote DB
 	@echo "🔌 Starting Cloud SQL Proxy..."
 	@rm -f .db_proxy.log .db_proxy.pid
-	@stdbuf -oL cloud-sql-proxy $(CLOUD_SQL_INSTANCE) \
+	@stdbuf -oL cloud-sql-proxy $(CLOUD_SQL_INSTANCE_CONNECTION_NAME) \
 		--credentials-file=config/gcp-creds.json \
 		--address=0.0.0.0 \
 		--port=5432 > .db_proxy.log 2>&1 & echo $$! > .db_proxy.pid
@@ -35,7 +43,8 @@ db-proxy-down: ## 🔒 Stop Cloud SQL Proxy and clean up PID file
 
 
 db-gateway-build: ## 🐳 Build the DB Gateway Docker image
-	docker build -t $(DB_GATEWAY_IMAGE) -f $(DB_GATEWAY_DOCKERFILE) $(DB_GATEWAY_CONTEXT)
+	docker build --target $(MODE) -t $(DB_GATEWAY_IMAGE) -f $(DB_GATEWAY_DOCKERFILE) $(DB_GATEWAY_CONTEXT) \
+		--build-arg PROJECT_ID=$(PROJECT_ID)
 
 db-gateway-run: ## 🚀 Run container in foreground (interactive)
 	docker run --rm -it \
@@ -50,6 +59,7 @@ db-gateway-up: ## 🚀 Run container in detached mode
 		--name $(DB_GATEWAY_CONTAINER) \
 		--env-file $(DB_GATEWAY_ENV_FILE) \
 		-e PYTHONPATH=/app \
+		-e $(CLOUD_SQL_INSTANCE_CONNECTION_NAME)
 		--add-host=host.docker.internal:host-gateway \
 		$(DB_GATEWAY_IMAGE) \
 		sleep infinity

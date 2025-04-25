@@ -19,7 +19,7 @@ DB_GATEWAY_MOUNTS := \
 .PHONY: db-gateway-build db-gateway-up db-gateway-down db-gateway-shell db-gateway-init db-gateway-mqtt db-gateway-dev
 
 db-gateway-build: ## 🐳 Build the DB Gateway Docker image
-	docker build -t $(DB_GATEWAY_IMAGE) -f $(DB_GATEWAY_DOCKERFILE) $(DB_GATEWAY_CONTEXT)
+	docker build --target $(MODE) -t $(DB_GATEWAY_IMAGE) -f $(DB_GATEWAY_DOCKERFILE) $(DB_GATEWAY_CONTEXT)
 
 db-gateway-run: ## 🚀 Run container in foreground (interactive)
 	docker run --rm -it \
@@ -34,6 +34,7 @@ db-gateway-up: ## 🚀 Run container in detached mode
 		--name $(DB_GATEWAY_CONTAINER) \
 		--env-file $(DB_GATEWAY_ENV_FILE) \
 		-e PYTHONPATH=/app \
+		--add-host=host.docker.internal:host-gateway \
 		$(DB_GATEWAY_IMAGE) \
 		sleep infinity
 
