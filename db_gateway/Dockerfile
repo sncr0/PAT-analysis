@@ -71,4 +71,4 @@ ARG PROJECT_ID
 RUN gcloud config set project $PROJECT_ID
 
 # Default command: run the setup script and then keep the container alive
-CMD ["/bin/sh", "-c", "/setup_proxy.sh && tail -f /dev/null"]
+CMD ["/bin/sh", "-c", "/setup_proxy.sh & uvicorn db_gateway.api.main:app --host 0.0.0.0 --port 8080"]

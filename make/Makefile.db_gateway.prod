@@ -27,7 +27,7 @@ PROJECT_ID := $(shell grep PROJECT_ID $(DATABASE_ENV_FILE) | cut -d '=' -f2)
 REGION := $(shell grep REGION $(DATABASE_ENV_FILE) | cut -d '=' -f2)
 INSTANCE_ID := $(shell grep DNSTANCE_ID $(DATABASE_ENV_FILE) | cut -d '=' -f2)
 CLOUD_SQL_INSTANCE_CONNECTION_NAME := $(shell grep CLOUD_SQL_INSTANCE_CONNECTION_NAME $(DATABASE_ENV_FILE) | cut -d '=' -f2)
-
+DB_GATEWAY_PORT := $(shell grep DB_GATEWAY_PORT $(DB_GATEWAY_ENV_FILE) | cut -d '=' -f2)
 
 db-proxy-up: ## 🔌 Start Cloud SQL Proxy for local access to remote DB
 	@echo "🔌 Starting Cloud SQL Proxy..."
@@ -41,6 +41,12 @@ db-proxy-up: ## 🔌 Start Cloud SQL Proxy for local access to remote DB
 db-proxy-down: ## 🔒 Stop Cloud SQL Proxy and clean up PID file
 	-[ -f .db_proxy.pid ] && kill `cat .db_proxy.pid` && rm .db_proxy.pid
 
+gcp-register: ## 🐳 Tag and push the Docker image to GCR
+	@echo "🏷️  Tagging image db-gateway:$(MODE) -> gcr.io/$(PROJECT_ID)/db-gateway:$(MODE)"
+	docker tag db-gateway:$(MODE) gcr.io/$(PROJECT_ID)/db-gateway:$(MODE)
+	@echo "🚀 Pushing image to GCR: gcr.io/$(PROJECT_ID)/db-gateway:$(MODE)"
+	docker push gcr.io/$(PROJECT_ID)/db-gateway:$(MODE)
+	@echo "✅ Done."
 
 db-gateway-build: ## 🐳 Build the DB Gateway Docker image
 	docker build --target $(MODE) -t $(DB_GATEWAY_IMAGE) -f $(DB_GATEWAY_DOCKERFILE) $(DB_GATEWAY_CONTEXT) \
@@ -61,6 +67,7 @@ db-gateway-up: ## 🚀 Run container in detached mode
 		-e PYTHONPATH=/app \
 		-e CLOUD_SQL_INSTANCE_CONNECTION_NAME="$(CLOUD_SQL_INSTANCE_CONNECTION_NAME)" \
 		--add-host=host.docker.internal:host-gateway \
+		-p $(DB_GATEWAY_PORT):$(DB_GATEWAY_PORT) \
 		$(DB_GATEWAY_IMAGE) \
 
 db-gateway-down: ## 🛑 Stop and remove gateway container
