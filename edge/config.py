@@ -18,7 +18,7 @@ CSV_DATA_PATH = os.getenv("CSV_DATA_PATH", DEFAULT_CSV_FOLDER)
 
 
 # --- MQTT Broker Settings ---
-MQTT_BROKER = os.getenv("MQTT_BROKER", "localhost")
+MQTT_BROKER = "34.69.87.158" #os.getenv("MQTT_BROKER", "https://db-gateway-589892908719.us-central1.run.app") # "localhost")
 MQTT_PORT = int(os.getenv("MQTT_PORT", "1883"))
 MQTT_TOPIC = os.getenv("MQTT_TOPIC", "spectroscopy/measurements")
 
