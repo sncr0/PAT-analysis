@@ -9,6 +9,8 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     libpq-dev \
     curl \
+    mosquitto \
+    mosquitto-clients \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python requirements
@@ -30,7 +32,7 @@ FROM base AS dev
 # RUN apt-get install -y postgresql-client
 
 # Default behavior: keep container alive for dev
-CMD ["tail", "-f", "/dev/null"]
+CMD ["/bin/sh", "-c", "mosquitto -c db_gateway/config/mosquitto.conf & uvicorn db_gateway.api.main:app --host 0.0.0.0 --port 8080"]
 
 
 
@@ -45,7 +47,7 @@ FROM google/cloud-sdk:slim as prod
 WORKDIR /app
 
 # Install PostgreSQL client and other required dependencies
-RUN apt-get update -qq && apt-get install -y -qq postgresql-client curl && rm -rf /var/lib/apt/lists/*
+RUN apt-get update -qq && apt-get install -y -qq postgresql-client curl mosquitto mosquitto-clients && rm -rf /var/lib/apt/lists/*
 
 # Download and prepare the Cloud SQL Proxy binary
 RUN curl -sSL -o /cloud_sql_proxy https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.10.1/cloud-sql-proxy.linux.amd64
@@ -71,4 +73,4 @@ ARG PROJECT_ID
 RUN gcloud config set project $PROJECT_ID
 
 # Default command: run the setup script and then keep the container alive
-CMD ["/bin/sh", "-c", "/setup_proxy.sh & uvicorn db_gateway.api.main:app --host 0.0.0.0 --port 8080"]
+CMD ["/bin/sh", "-c", "mosquitto -c db_gateway/config/mosquitto.conf & /setup_proxy.sh & uvicorn db_gateway.api.main:app --host 0.0.0.0 --port 8080"]

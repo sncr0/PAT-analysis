@@ -16,6 +16,10 @@ DB_GATEWAY_MOUNTS := \
 	-v $(CURDIR)/core:/app/core \
 	-v $(CURDIR)/config:/app/config
 
+DB_GATEWAY_PORT := $(shell grep DB_GATEWAY_PORT $(DB_GATEWAY_ENV_FILE) | cut -d '=' -f2)
+MQTT_PORT := $(shell grep MQTT_PORT $(DB_GATEWAY_ENV_FILE) | cut -d '=' -f2)
+
+
 .PHONY: db-gateway-build db-gateway-up db-gateway-down db-gateway-shell db-gateway-init db-gateway-mqtt db-gateway-dev
 
 db-gateway-build: ## 🐳 Build the DB Gateway Docker image
@@ -35,8 +39,9 @@ db-gateway-up: ## 🚀 Run container in detached mode
 		--env-file $(DB_GATEWAY_ENV_FILE) \
 		-e PYTHONPATH=/app \
 		--add-host=host.docker.internal:host-gateway \
-		$(DB_GATEWAY_IMAGE) \
-		sleep infinity
+		-p $(DB_GATEWAY_PORT):$(DB_GATEWAY_PORT) \
+		-p $(MQTT_PORT):$(MQTT_PORT) \
+		$(DB_GATEWAY_IMAGE)
 
 db-gateway-down: ## 🛑 Stop and remove gateway container
 	-docker stop --time=0 $(DB_GATEWAY_CONTAINER)
