@@ -1,7 +1,8 @@
 import os
 import json
 import logging
-import signal
+import socket
+import time
 from datetime import datetime
 import paho.mqtt.client as mqtt
 from db_gateway.engine import SessionLocal
@@ -36,24 +37,37 @@ def on_message(_client, _userdata, msg):
         session.close()
 
 
-def handle_shutdown(signum, frame):
-    logger.warning("🛑 Shutdown signal received, disconnecting MQTT client...")
+def stop_listener():
+    """
+    Disconnects from the MQTT broker and stops the client loop.
+    """
+    logger.warning("🛑 Stopping MQTT listener...")
+    client.loop_stop()
     client.disconnect()
 
 
-def start(broker: str = MQTT_BROKER, port: int = MQTT_PORT, topic: str = MQTT_TOPIC):
+
+def start_listener(broker: str = MQTT_BROKER, port: int = MQTT_PORT, topic: str = MQTT_TOPIC):
     """
-    Entry point to start the MQTT listener.
+    Connects to the MQTT broker and starts the client loop.
+    Retries connection if broker is not yet available.
     """
     client.on_message = on_message
-    signal.signal(signal.SIGINT, handle_shutdown)
-    signal.signal(signal.SIGTERM, handle_shutdown)
+    logger.info(f"📡 Connecting to MQTT broker at {broker}:{port}...")
 
-    try:
-        logger.info(f"📡 Connecting to MQTT broker at {broker}:{port}...")
-        client.connect(broker, port)
-        client.subscribe(topic)
-        logger.info(f"🔄 Subscribed to '{topic}', listening for messages...")
-        client.loop_forever()
-    except Exception as e:
-        logger.critical(f"❌ MQTT Listener crashed: {e}", exc_info=True)
+    retries = 5
+    while retries > 0:
+        try:
+            client.connect(broker, port)
+            break
+        except (ConnectionRefusedError, socket.error) as e:
+            logger.warning(f"⚠️ MQTT broker not available yet ({e}), retrying in 2s...")
+            time.sleep(2)
+            retries -= 1
+    else:
+        logger.critical("❌ Could not connect to MQTT broker after retries, giving up.")
+        raise RuntimeError("MQTT broker unavailable.")
+
+    client.subscribe(topic)
+    logger.info(f"🔄 Subscribed to '{topic}', listening for messages...")
+    client.loop_start()

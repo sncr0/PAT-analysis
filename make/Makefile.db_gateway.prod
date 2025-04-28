@@ -1,0 +1,103 @@
+# ========================================
+# DB GATEWAY (MQTT Listener + DB Init)
+# ========================================
+
+# ----------- Mode & Defaults ------------
+MODE ?= dev
+DB_GATEWAY_ENV_FILE := ./config/db_gateway.$(MODE).env
+DATABASE_ENV_FILE := ./config/database.${MODE}.env
+
+DB_GATEWAY_IMAGE       = db-gateway:$(MODE)
+DB_GATEWAY_CONTAINER   = db-gateway-$(MODE)
+DB_GATEWAY_DOCKERFILE  = ./db_gateway/Dockerfile
+DB_GATEWAY_CONTEXT     = .
+
+DB_GATEWAY_MOUNTS := \
+	-v $(CURDIR)/db_gateway:/app/db_gateway \
+	-v $(CURDIR)/core:/app/core \
+	-v $(CURDIR)/config:/app/config
+
+
+.PHONY: db-proxy-up db-proxy-down
+
+# CLOUD_SQL_INSTANCE := $(shell gcloud sql instances describe spectroscopy-database --format="value(connectionName)")
+# CLOUD_SQL_INSTANCE := swift-hangar-452217-q7:us-central1:spectroscopy-database
+
+PROJECT_ID := $(shell grep PROJECT_ID $(DATABASE_ENV_FILE) | cut -d '=' -f2)
+REGION := $(shell grep REGION $(DATABASE_ENV_FILE) | cut -d '=' -f2)
+INSTANCE_ID := $(shell grep DNSTANCE_ID $(DATABASE_ENV_FILE) | cut -d '=' -f2)
+CLOUD_SQL_INSTANCE_CONNECTION_NAME := $(shell grep CLOUD_SQL_INSTANCE_CONNECTION_NAME $(DATABASE_ENV_FILE) | cut -d '=' -f2)
+DB_GATEWAY_PORT := $(shell grep DB_GATEWAY_PORT $(DB_GATEWAY_ENV_FILE) | cut -d '=' -f2)
+MQTT_PORT := $(shell grep MQTT_PORT $(DB_GATEWAY_ENV_FILE) | cut -d '=' -f2)
+
+
+db-proxy-up: ## 🔌 Start Cloud SQL Proxy for local access to remote DB
+	@echo "🔌 Starting Cloud SQL Proxy..."
+	@rm -f .db_proxy.log .db_proxy.pid
+	@stdbuf -oL cloud-sql-proxy $(CLOUD_SQL_INSTANCE_CONNECTION_NAME) \
+		--credentials-file=config/gcp-creds.json \
+		--address=0.0.0.0 \
+		--port=5432 > .db_proxy.log 2>&1 & echo $$! > .db_proxy.pid
+	@tail -n +1 -f .db_proxy.log | sed '/ready for new connections/ q'
+
+db-proxy-down: ## 🔒 Stop Cloud SQL Proxy and clean up PID file
+	-[ -f .db_proxy.pid ] && kill `cat .db_proxy.pid` && rm .db_proxy.pid
+
+gcp-register: ## 🐳 Tag and push the Docker image to GCR
+	@echo "🏷️  Tagging image db-gateway:$(MODE) -> gcr.io/$(PROJECT_ID)/db-gateway:$(MODE)"
+	docker tag db-gateway:$(MODE) gcr.io/$(PROJECT_ID)/db-gateway:$(MODE)
+	@echo "🚀 Pushing image to GCR: gcr.io/$(PROJECT_ID)/db-gateway:$(MODE)"
+	docker push gcr.io/$(PROJECT_ID)/db-gateway:$(MODE)
+	@echo "✅ Done."
+
+db-gateway-build: ## 🐳 Build the DB Gateway Docker image
+	docker build --target $(MODE) -t $(DB_GATEWAY_IMAGE) -f $(DB_GATEWAY_DOCKERFILE) $(DB_GATEWAY_CONTEXT) \
+		--build-arg PROJECT_ID=$(PROJECT_ID)
+
+db-gateway-run: ## 🚀 Run container in foreground (interactive)
+	docker run --rm -it \
+		--name $(DB_GATEWAY_CONTAINER) \
+		--env-file $(DB_GATEWAY_ENV_FILE) \
+		-e PYTHONPATH=/app \
+		$(DB_GATEWAY_IMAGE) \
+		sleep infinity
+
+db-gateway-up: ## 🚀 Run container in detached mode
+	docker run -d \
+		--name $(DB_GATEWAY_CONTAINER) \
+		--env-file $(DB_GATEWAY_ENV_FILE) \
+		-e PYTHONPATH=/app \
+		-e CLOUD_SQL_INSTANCE_CONNECTION_NAME="$(CLOUD_SQL_INSTANCE_CONNECTION_NAME)" \
+		--add-host=host.docker.internal:host-gateway \
+		-p $(DB_GATEWAY_PORT):$(DB_GATEWAY_PORT) \
+		-p $(MQTT_PORT):$(MQTT_PORT) \
+		$(DB_GATEWAY_IMAGE) \
+
+db-gateway-down: ## 🛑 Stop and remove gateway container
+	-docker stop --time=0 $(DB_GATEWAY_CONTAINER)
+	-docker rm $(DB_GATEWAY_CONTAINER)
+
+db-gateway-shell: ## 🐚 Open shell inside running gateway container
+	docker exec -it $(DB_GATEWAY_CONTAINER) /bin/sh
+
+db-gateway-init: ## 🧠 Init DB schema via gateway
+	docker exec -e PYTHONPATH=/app -it $(DB_GATEWAY_CONTAINER) python3 db_gateway/main.py init-db
+
+db-gateway-mqtt: ## 📥 Start MQTT listener inside gateway
+	docker exec -e PYTHONPATH=/app -it $(DB_GATEWAY_CONTAINER) python db_gateway/main.py mqtt
+
+db-gateway-rebuild: ## ♻️ Rebuild image and restart container
+	make db-gateway-down
+	docker rmi -f $(DB_GATEWAY_IMAGE) || true
+	make db-gateway-build
+	make db-gateway-up
+
+db-gateway-dev: ## 🔁 Run dev container with mounted volumes
+	docker run --rm -it \
+		--name $(DB_GATEWAY_CONTAINER) \
+		--env-file $(DB_GATEWAY_ENV_FILE) \
+		$(DB_GATEWAY_MOUNTS) \
+		-w /app/db_gateway \
+		-e PYTHONPATH=/app \
+		$(DB_GATEWAY_IMAGE) \
+		python -m $(DB_GATEWAY_MODULE) mqtt

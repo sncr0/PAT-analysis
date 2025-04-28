@@ -4,6 +4,7 @@ data/
 notebooks/
 .coverage
 .bak
+gcp-creds.json
 
 # Node modules
 node_modules/
@@ -33,3 +34,6 @@ yarn-error.log*
 
 # Vite cache
 .vite/
+
+# proxy
+*.pid

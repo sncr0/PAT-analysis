@@ -1,0 +1,22 @@
+# ========================================
+# DATABASE DEV
+# ========================================
+
+# ----------- Mode & Defaults ------------
+MODE ?= prod
+
+DATABASE_ENV_FILE    = ./config/database.$(MODE).env
+DB_IMAGE_NAME        = spectroscopy-db:$(MODE)
+DB_CONTAINER_NAME    = spectroscopy-db
+DB_DOCKERFILE        = ./database/Dockerfile
+DB_CONTEXT           = ./database
+VOLUME_NAME          = spectroscopy-pgdata
+
+# Extract credentials from env file
+DB_USER := $(shell grep DB_USER $(DATABASE_ENV_FILE) | cut -d '=' -f2)
+DB_NAME := $(shell grep DB_NAME $(DATABASE_ENV_FILE) | cut -d '=' -f2)
+DB_PASSWORD := $(shell grep DB_PASSWORD $(DATABASE_ENV_FILE) | cut -d '=' -f2)
+
+db-connect: ## 🔗 Connect to Cloud SQL DB via local proxy
+	@echo "🔗 Connecting to GCP Cloud SQL via local proxy on 127.0.0.1..."
+	@PGPASSWORD=$(DB_PASSWORD) psql -h 127.0.0.1 -U $(DB_USER) #  -d $(DB_NAME)
