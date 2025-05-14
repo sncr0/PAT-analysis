@@ -44,19 +44,24 @@ async def publish_measurement_p2p(payload: dict):
     key_pair = create_new_key_pair(FIXED_SECRET)
     host = new_host(key_pair=key_pair)
     listen_addr = multiaddr.Multiaddr("/ip4/0.0.0.0/tcp/0")  # ephemeral port
+    print(payload["spectrum"].data["x"])
+    spectrum = list(payload["spectrum"].data["x"])
+    hashed_spectrum = hash_object_keccak256(spectrum)
+    print(hashed_spectrum)
 
     async with host.run(listen_addrs=[listen_addr]):
         info = info_from_p2p_addr(multiaddr.Multiaddr(RECEIVER_MULTIADDR))
         await host.connect(info)
         print('c')
-        print(payload)
+        # print(payload)
+        # print(payload["spectrum"]["X"])
         stream = await host.new_stream(info.peer_id, [PROTOCOL_ID])
         # await stream.write(json.dumps(payload).encode())
-        hashed_payload = {"hashed_spectrum": hash_object_keccak256(payload),
-                   "timestamp": payload["timestamp"]}
-        print(json.dumps(hashed_payload).encode())
-        print(hashed_payload)
-        print('b')
+        hashed_payload = {"hashed_spectrum": hashed_spectrum,
+                          "timestamp": payload["timestamp"]}
+        # print(json.dumps(hashed_payload).encode())
+        # print(hashed_payload)
+        # print('b')
         await stream.write(json.dumps(hashed_payload).encode())
         # await stream.write_eof()  # <-- this is essential to signal EOF to the receiver
         await trio.sleep(0.1)     # small delay to allow receiver to process
@@ -90,7 +95,7 @@ async def run_simulation_mode_sine():
             concentration = 0.5 + 0.45 * math.sin(i)
             print(f"🧪 Sine concentration: {concentration:.2f}")
             spectrum = build_spectrum(concentration=concentration)
-            timestamp = datetime.now(timezone.utc)
+            timestamp = datetime.now(timezone.utc).isoformat()
             # publish_measurement(spectrum)
             data = {
                 "spectrum": spectrum,
